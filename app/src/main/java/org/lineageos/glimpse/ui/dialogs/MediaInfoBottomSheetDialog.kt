@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Build
 import android.text.InputType
 import android.text.format.Formatter
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
@@ -32,6 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.lineageos.glimpse.R
 import org.lineageos.glimpse.ext.apertureValue
 import org.lineageos.glimpse.ext.artist
@@ -116,11 +118,29 @@ class MediaInfoBottomSheetDialog(
             null
         )
         mediaInfoListItem.headlineText = media.displayName ?: unknownString
+        mediaInfoListItem.supportingText = listOf(
+            media.mimeType,
+            "${media.width} x ${media.height}",
+            Formatter.formatFileSize(context, media.sizeBytes),
+        ).joinToString(SEPARATOR)
+
+        // Shown once the EXIF data has been read, if it can be
+        descriptionEditText.isVisible = false
+        artistInfoListItem.isVisible = false
+        cameraInfoListItem.isVisible = false
 
         val contentResolver = context.contentResolver
 
-        contentResolver.openInputStream(media.uri)?.use { inputStream ->
-            val exifInterface = ExifInterface(inputStream)
+        mainScope.launch {
+            val exifInterface = withContext(Dispatchers.IO) {
+                runCatching {
+                    contentResolver.openInputStream(media.uri)?.use { inputStream ->
+                        ExifInterface(inputStream)
+                    }
+                }.onFailure {
+                    Log.e(LOG_TAG, "Failed to read EXIF data of ${media.uri}", it)
+                }.getOrNull()
+            } ?: return@launch
 
             val userComment = exifInterface.userComment?.takeIf {
                 it.isNotBlank()
@@ -163,12 +183,6 @@ class MediaInfoBottomSheetDialog(
                 cameraInfoListItem.headlineText,
                 cameraInfoListItem.supportingText,
             ).any { !it.isNullOrBlank() && it != unknownString }
-
-            mediaInfoListItem.supportingText = listOf(
-                media.mimeType,
-                "${media.width} x ${media.height}",
-                Formatter.formatFileSize(context, media.sizeBytes),
-            ).joinToString(SEPARATOR)
 
             exifInterface.latLong?.let {
                 val (lat, long) = it
@@ -283,6 +297,8 @@ class MediaInfoBottomSheetDialog(
     }
 
     companion object {
+        private val LOG_TAG = MediaInfoBottomSheetDialog::class.simpleName!!
+
         private const val SEPARATOR = " • "
 
         private val dateFormatter = SimpleDateFormat.getDateInstance()
