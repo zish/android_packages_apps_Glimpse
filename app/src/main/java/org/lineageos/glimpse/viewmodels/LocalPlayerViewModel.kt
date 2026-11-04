@@ -12,6 +12,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
@@ -69,6 +71,16 @@ class LocalPlayerViewModel(
         .build()
         .apply {
             repeatMode = ExoPlayer.REPEAT_MODE_ONE
+
+            addListener(object : Player.Listener {
+                override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+                    // A video with no duration would be restarted over and over
+                    repeatMode = when (duration) {
+                        0L -> ExoPlayer.REPEAT_MODE_OFF
+                        else -> ExoPlayer.REPEAT_MODE_ONE
+                    }
+                }
+            })
         }
 
     val isPlaying = exoPlayer.isPlayingFlow()
