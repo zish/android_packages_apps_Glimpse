@@ -54,11 +54,11 @@ class MediaViewerAdapter(
         super.onViewDetachedFromWindow(holder)
     }
 
+    @OptIn(androidx.media3.common.util.UnstableApi::class)
     inner class MediaViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         // Views
         private val imageView = view.findViewById<GlideZoomImageView>(R.id.imageView)
 
-        @OptIn(androidx.media3.common.util.UnstableApi::class)
         private val playerControlView =
             view.findViewById<PlayerControlView>(androidx.media3.ui.R.id.exo_controller)
         private val playerView = view.findViewById<PlayerView>(R.id.playerView)
@@ -71,7 +71,6 @@ class MediaViewerAdapter(
             onNavigate = onNavigate,
         )
 
-        @OptIn(androidx.media3.common.util.UnstableApi::class)
         private val mediaPositionObserver: (Int?) -> Unit = { currentPosition: Int? ->
             isCurrentlyDisplayedView = currentPosition == bindingAdapterPosition
 
@@ -116,7 +115,6 @@ class MediaViewerAdapter(
             }
         }
 
-        @OptIn(androidx.media3.common.util.UnstableApi::class)
         private val fullscreenModeObserver = { fullscreenMode: Boolean ->
             if (media?.mediaType == MediaType.VIDEO) {
                 playerControlView.fade(!fullscreenMode)
@@ -145,7 +143,6 @@ class MediaViewerAdapter(
             playerView.setOnTouchListener(mediaGestureListener)
         }
 
-        @OptIn(androidx.media3.common.util.UnstableApi::class)
         private fun updateMediaGestureListener(isVideoPlayer: Boolean) {
             mediaGestureListener.edgeTapNavigationEnabled =
                 localPlayerViewModel.edgeTapNavigationEnabled
@@ -162,7 +159,6 @@ class MediaViewerAdapter(
             }
         }
 
-        @OptIn(androidx.media3.common.util.UnstableApi::class)
         private fun updateNativeSeekButtons() {
             val hideButtons = localPlayerViewModel.hideNativeSeekButtons
 
@@ -196,7 +192,6 @@ class MediaViewerAdapter(
             }
         }
 
-        @OptIn(androidx.media3.common.util.UnstableApi::class)
         fun onViewDetachedFromWindow() {
             observersJob?.cancel()
             observersJob = null
