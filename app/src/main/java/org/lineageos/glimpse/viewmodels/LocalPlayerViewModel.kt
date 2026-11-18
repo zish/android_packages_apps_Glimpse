@@ -47,6 +47,7 @@ import org.lineageos.glimpse.models.RequestStatus.Companion.map
 import org.lineageos.glimpse.utils.MotionPhotoExtractor
 import org.lineageos.glimpse.utils.media3.ByteBufferDataSource
 
+@androidx.annotation.OptIn(UnstableApi::class)
 class LocalPlayerViewModel(
     application: Application,
     savedStateHandle: SavedStateHandle,
@@ -58,6 +59,7 @@ class LocalPlayerViewModel(
 
     // ExoPlayer
     val exoPlayer = ExoPlayer.Builder(applicationContext)
+        .setUsePlatformDiagnostics(false)
         .setAudioAttributes(
             AudioAttributes.Builder()
                 .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
@@ -405,7 +407,6 @@ class LocalPlayerViewModel(
         this.motionPhotoEnabled.value = motionPhotoEnabled
     }
 
-    @androidx.annotation.OptIn(UnstableApi::class)
     fun playMotionPhoto(motionPhoto: MotionPhoto) {
         val dataSourceFactory = ByteBufferDataSource.Factory(motionPhoto.videoBuffer)
         val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
